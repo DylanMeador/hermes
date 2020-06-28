@@ -104,7 +104,7 @@ func loadSound(path string) ([][]byte, error) {
 		return nil, err
 	}
 
-	var opuslen int
+	var opuslen int32
 	var buffer [][]byte
 
 	for {
