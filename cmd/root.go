@@ -59,7 +59,7 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Println(m.Author.ID + ": " + m.Content)
 
 	cmd := Cmd(s, m)
-	args := strings.Split(m.Content, " ")
+	args := strings.Split(m.Content, " ")[1:]
 
 	if err := cmd.ValidateArgs(args); err != nil {
 		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, emojis.POOP)
