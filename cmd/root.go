@@ -63,24 +63,33 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")[1:]
 	cmd.SetArgs(args)
 
-
-
-	if err := cobra.OnlyValidArgs(cmd, args); err != nil {
-		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, emojis.POOP)
-		if err != nil {
-			log.Println(err)
-		}
+	if err := cmd.ParseFlags(args); err != nil {
+		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP, emojis.FLAG)
+	} else if err := cobra.OnlyValidArgs(cmd, args); err != nil {
+		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP, emojis.C, emojis.O, emojis.M, emojis.M, emojis.A, emojis.N, emojis.D)
 	} else {
 		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
-			log.Println(err)
-			_, err = s.ChannelMessageSend(m.ChannelID, gifs.BUG)
-			if err != nil {
-				log.Println(err)
-			}
+			bug(err, s, m.ChannelID)
 		}
 	}
+}
 
-	return
+func addReactions(s *discordgo.Session, channelID string, messageID string, emojiIDs... string) {
+	for _, emojiID := range emojiIDs {
+		err := s.MessageReactionAdd(channelID, messageID, emojiID)
+		if err != nil {
+			bug(err, s, channelID)
+			break
+		}
+	}
+}
+
+func bug(err error, s *discordgo.Session, channelID string) {
+	log.Println(err)
+	_, err = s.ChannelMessageSend(channelID, gifs.BUG)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 type responseWriter struct {
