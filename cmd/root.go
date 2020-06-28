@@ -59,15 +59,18 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Println(m.Author.String() + ": " + m.Content)
 
 	cmd := Cmd(s, m)
-	args := strings.Split(m.Content, " ")[1:]
 
-	if err := cmd.ValidateArgs(args); err != nil {
+	args := strings.Split(m.Content, " ")[1:]
+	cmd.SetArgs(args)
+
+
+
+	if err := cobra.OnlyValidArgs(cmd, args); err != nil {
 		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, emojis.POOP)
 		if err != nil {
 			log.Println(err)
 		}
 	} else {
-		cmd.SetArgs(args)
 		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
 			log.Println(err)
 			_, err = s.ChannelMessageSend(m.ChannelID, gifs.BUG)
