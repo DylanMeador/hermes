@@ -35,7 +35,7 @@ func Cmd() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the troll in")
 	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played")
-	//cmd.PersistentFlags().MarkHidden("joke")
+	cmd.PersistentFlags().MarkHidden("joke")
 
 	return cmd
 }
@@ -60,12 +60,6 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 	}
 
 	var channelID string
-	//for _, c := range g.Channels {
-	//	if c.Type == discordgo.ChannelTypeGuildVoice && strings.EqualFold(c.Name, "afk") {
-	//		afkChannelID = c.ID
-	//		break
-	//	}
-	//}
 	if len(a.channelName) > 0 {
 		for _, c := range g.Channels {
 			if c.Type == discordgo.ChannelTypeGuildVoice && strings.EqualFold(c.Name, a.channelName) {
@@ -119,7 +113,7 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		//return s.GuildMemberMove(m.GuildID, m.Author.ID, afkChannelID)
+		//return s.GuildMemberMove(m.GuildID, m.Author.ID, "afkChannelID")
 	}
 
 	return nil
