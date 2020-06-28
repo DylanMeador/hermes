@@ -34,7 +34,7 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 
 	cmd.AddCommand(airhorn.Cmd())
 	cmd.SetHelpCommand(&cobra.Command{Use: "nope", Hidden: true})
-	cmd.InitDefaultHelpFlag()
+	cmd.PersistentFlags().Bool("help", false, "none")
 	cmd.PersistentFlags().MarkHidden("help")
 
 	return cmd
