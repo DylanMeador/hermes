@@ -13,7 +13,9 @@ import (
 	"time"
 )
 
-var soundBuffer = make([][]byte, 0)
+var soundBuffer1 = make([][]byte, 0)
+var soundBuffer2 = make([][]byte, 0)
+
 var once sync.Once
 
 type args struct {
@@ -21,13 +23,13 @@ type args struct {
 }
 
 func Cmd() *cobra.Command {
-	a := &args {}
+	a := &args{}
 
 	cmd := &cobra.Command{
 		Use:    "airhorn",
 		Short:  "An airhorn sound will play in your current channel",
 		PreRun: a.preRun,
-		RunE:    a.run,
+		RunE:   a.run,
 	}
 
 	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the airhorn in")
@@ -38,7 +40,12 @@ func Cmd() *cobra.Command {
 func (a *args) preRun(cmd *cobra.Command, args []string) {
 	// Load the sound file.
 	once.Do(func() {
-		err := loadSound()
+		var err error
+		soundBuffer1, err = loadSound("sounds/blame.dca")
+		if err != nil {
+			log.Println("Error loading sound: ", err)
+		}
+		soundBuffer2, err = loadSound("sounds/shaco/joke.dca")
 		if err != nil {
 			log.Println("Error loading sound: ", err)
 		}
@@ -90,14 +97,15 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 }
 
 // loadSound attempts to load an encoded sound file from disk.
-func loadSound() error {
-	file, err := os.Open("cmd/airhorn/airhorn.dca")
+func loadSound(path string) ([][]byte, error) {
+	file, err := os.Open(path)
 	if err != nil {
 		log.Println("Error opening dca file :", err)
-		return err
+		return nil, err
 	}
 
 	var opuslen int16
+	var buffer [][]byte
 
 	for {
 		// Read opus frame length from dca file.
@@ -107,14 +115,14 @@ func loadSound() error {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
 			err := file.Close()
 			if err != nil {
-				return err
+				return nil, err
 			}
-			return nil
+			return buffer, nil
 		}
 
 		if err != nil {
 			log.Println("Error reading from dca file :", err)
-			return err
+			return nil, err
 		}
 
 		// Read encoded pcm from dca file.
@@ -124,11 +132,11 @@ func loadSound() error {
 		// Should not be any end of file errors
 		if err != nil {
 			log.Println("Error reading from dca file :", err)
-			return err
+			return nil, err
 		}
 
 		// Append encoded pcm data to the soundBuffer.
-		soundBuffer = append(soundBuffer, InBuf)
+		buffer = append(buffer, InBuf)
 	}
 }
 
@@ -147,7 +155,11 @@ func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 	vc.Speaking(true)
 
 	// Send the soundBuffer data.
-	for _, buff := range soundBuffer {
+	for _, buff := range soundBuffer1 {
+		vc.OpusSend <- buff
+	}
+
+	for _, buff := range soundBuffer2 {
 		vc.OpusSend <- buff
 	}
 

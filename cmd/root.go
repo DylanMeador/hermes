@@ -74,30 +74,38 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if len(errEmojis) > 0 {
-		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP)
-		addReactions(s, m.ChannelID, m.Message.ID, errEmojis...)
+		addReactions(s, m, emojis.POOP)
+		addReactions(s, m, errEmojis...)
 	} else {
 		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
-			bug(err, s, m.ChannelID)
+			bug(err, s, m)
 		}
 	}
 }
 
-func addReactions(s *discordgo.Session, channelID string, messageID string, emojiIDs ...string) {
+func addReactions(s *discordgo.Session, m *discordgo.MessageCreate, emojiIDs ...string) {
 	for _, emojiID := range emojiIDs {
-		err := s.MessageReactionAdd(channelID, messageID, emojiID)
+		err := s.MessageReactionAdd(m.ChannelID, m.Message.ID, emojiID)
 		if err != nil {
-			bug(err, s, channelID)
+			bug(err, s, m)
 			break
 		}
 	}
 }
 
-func bug(err error, s *discordgo.Session, channelID string) {
+func bug(err error, s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Println(err)
-	_, err = s.ChannelMessageSend(channelID, gifs.BUG)
+	_, err = s.ChannelMessageSend(m.ChannelID, gifs.BUG)
 	if err != nil {
 		log.Println(err)
+	}
+
+	const hacker = "#hacker"
+	if !strings.Contains(m.Author.Username, hacker) {
+		err = s.GuildMemberNickname(m.GuildID, m.Author.ID, m.Author.Username + hacker)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
