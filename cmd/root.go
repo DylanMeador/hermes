@@ -25,10 +25,8 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	return cmd
 }
 
-func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if err := Cmd(s, m).ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
-		log.Println(err)
-	}
+func Execute(s *discordgo.Session, m *discordgo.MessageCreate) error {
+	return Cmd(s, m).ExecuteContext(discord.GenerateDiscordContext(s, m))
 }
 
 type reponseWriter struct {

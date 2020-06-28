@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/DylanMeador/hermes/cmd"
 	"github.com/bwmarrin/discordgo"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -30,7 +31,7 @@ func main() {
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("HERMES ONLINE...")
+	fmt.Println("Here we go!")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
@@ -46,7 +47,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, "hermes") {
-		go cmd.Execute(s, m)
+		go func() {
+			log.Println(m.Author.Username + ": " + m.Content)
+			err := cmd.Execute(s, m)
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 }
 
