@@ -35,7 +35,6 @@ Global Flags:
 Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}`
 
-
 func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "hermes",
@@ -63,10 +62,21 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")[1:]
 	cmd.SetArgs(args)
 
-	if err := cmd.ParseFlags(args); err != nil {
-		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP, emojis.FLAG)
-	} else if _, _, err := cmd.Find(args); err != nil {
-		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP, emojis.C, emojis.O, emojis.M, emojis.M2, emojis.A, emojis.N, emojis.D)
+	flagErr := cmd.ParseFlags(args)
+	_, _, commandErr := cmd.Find(args)
+
+	var errEmojis []string
+
+	if flagErr != nil {
+		errEmojis = append(errEmojis, emojis.FLAG)
+	}
+	if commandErr != nil {
+		errEmojis = append(errEmojis, emojis.C, emojis.O, emojis.M, emojis.M2, emojis.A, emojis.N, emojis.D)
+	}
+
+	if len(errEmojis) > 0 {
+		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP)
+		addReactions(s, m.ChannelID, m.Message.ID, errEmojis...)
 	} else {
 		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
 			bug(err, s, m.ChannelID)
@@ -74,7 +84,7 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func addReactions(s *discordgo.Session, channelID string, messageID string, emojiIDs... string) {
+func addReactions(s *discordgo.Session, channelID string, messageID string, emojiIDs ...string) {
 	for _, emojiID := range emojiIDs {
 		err := s.MessageReactionAdd(channelID, messageID, emojiID)
 		if err != nil {
