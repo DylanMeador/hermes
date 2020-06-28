@@ -1,1 +1,1 @@
-worker: hermes
+worker: bin/hermesgit co
