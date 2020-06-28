@@ -21,23 +21,29 @@ var mux sync.Mutex
 
 type args struct {
 	channelName string
+	forceJoke   bool
 }
 
 func Cmd() *cobra.Command {
 	a := &args{}
 
 	cmd := &cobra.Command{
-		Use:    "troll",
-		Short:  "Shaco sounds...mostly",
-		RunE:   a.run,
+		Use:   "troll",
+		Short: "Shaco sounds...mostly",
+		RunE:  a.run,
 	}
 
 	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the troll in")
+	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played")
+	cmd.PersistentFlags().MarkHidden("joke")
 
 	return cmd
 }
 
 func (a *args) run(cmd *cobra.Command, args []string) error {
+	mux.Lock()
+	defer mux.Unlock()
+
 	s, m := discord.GetSessionAndMessageFromContext(cmd.Context())
 
 	// Find the channel that the message came from.
@@ -53,11 +59,16 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var channelID string
+	var channelID, afkChannelID string
 	if len(a.channelName) > 0 {
 		for _, c := range g.Channels {
-			if c.Type == discordgo.ChannelTypeGuildVoice && strings.EqualFold(c.Name, a.channelName) {
-				channelID = c.ID
+			if c.Type == discordgo.ChannelTypeGuildVoice {
+				if strings.EqualFold(c.Name, a.channelName) {
+					channelID = c.ID
+				} else if strings.EqualFold(c.Name, "afk") {
+					afkChannelID = c.ID
+				}
+
 				break
 			}
 		}
@@ -99,7 +110,7 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		//	fmt.Println(m.Author.ID)
 		//}
 		//s.GuildMemberMove()
-		return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
+		return s.GuildMemberMove(m.GuildID, m.Author.ID, afkChannelID)
 	}
 
 	return nil
@@ -110,9 +121,6 @@ func loadSound(path string) ([][]byte, error) {
 	if sound, ok := soundCache[path]; ok {
 		return sound, nil
 	}
-
-	mux.Lock()
-	defer mux.Unlock()
 
 	file, err := os.Open(path)
 	if err != nil {
