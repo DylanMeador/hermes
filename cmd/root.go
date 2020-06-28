@@ -61,7 +61,8 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")[1:]
 	cmd.SetArgs(args)
 
-	_, _, flagErr := cmd.Traverse(args)
+	//_, _, flagErr := cmd.Traverse(args)
+	flagErr := cmd.ParseFlags(args)
 	_, _, commandErr := cmd.Find(args)
 
 	var errEmojis []string
