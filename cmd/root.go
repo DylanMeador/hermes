@@ -46,7 +46,6 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd.SetArgs(args[1:])
 	cmd.SetOut(responseWriter{s, m})
 	cmd.SetErr(errWriter{s, m})
-	cmd.SilenceUsage = true
 	cmd.SetUsageTemplate(usageTemplate)
 
 	cmd.AddCommand(airhorn.Cmd())
