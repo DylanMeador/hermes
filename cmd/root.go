@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/DylanMeador/hermes/cmd/airhorn"
 	"github.com/DylanMeador/hermes/discord"
+	"github.com/DylanMeador/hermes/emojis"
 	"github.com/DylanMeador/hermes/shaco"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
@@ -61,9 +62,7 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	err := Cmd(s, m).ExecuteContext(discord.GenerateDiscordContext(s, m))
 	if err != nil {
 		log.Println(err)
-		response := "> " + m.Content + "\n"
-		response += "The joke's on you!"
-		_, err = s.ChannelMessageSend(m.ChannelID, response)
+		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, emojis.POOP)
 		if err != nil {
 			log.Println(err)
 		}
