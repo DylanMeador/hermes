@@ -43,6 +43,8 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 
 	cmd.SetOut(responseWriter{s, m})
 	cmd.SetUsageTemplate(usageTemplate)
+	cmd.InitDefaultHelpFlag()
+	cmd.InitDefaultHelpCmd()
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
