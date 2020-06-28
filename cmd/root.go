@@ -22,6 +22,29 @@ var quotes = []string{
 	"How about a magic trick?",
 }
 
+var usageTemplate = `Usage:{{if .Runnable}}
+{{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+{{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+{{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+{{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+{{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}`
+
+
 func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "hermes",
@@ -31,11 +54,12 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	args := strings.Split(m.Content, " ")
 	cmd.SetArgs(args[1:])
 	cmd.SetOut(responseWriter{s, m})
-
-	cmd.AddCommand(airhorn.Cmd())
 	cmd.SetHelpCommand(&cobra.Command{Use: "nope", Hidden: true})
 	cmd.PersistentFlags().Bool("help", false, "none")
 	cmd.PersistentFlags().MarkHidden("help")
+	cmd.SetUsageTemplate(usageTemplate)
+
+	cmd.AddCommand(airhorn.Cmd())
 
 	return cmd
 }
