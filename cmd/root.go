@@ -66,7 +66,7 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if err := cmd.ParseFlags(args); err != nil {
 		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP, emojis.FLAG)
 	} else if _, _, err := cmd.Find(args); err != nil {
-		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP, emojis.C, emojis.O, emojis.M, emojis.M, emojis.A, emojis.N, emojis.D)
+		addReactions(s, m.ChannelID, m.Message.ID, emojis.POOP, emojis.C, emojis.O, emojis.M, emojis.M2, emojis.A, emojis.N, emojis.D)
 	} else {
 		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
 			bug(err, s, m.ChannelID)
