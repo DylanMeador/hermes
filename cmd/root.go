@@ -3,24 +3,13 @@ package cmd
 import (
 	"github.com/DylanMeador/hermes/cmd/airhorn"
 	"github.com/DylanMeador/hermes/discord"
+	"github.com/DylanMeador/hermes/shaco"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
+	"log"
 	"math/rand"
 	"strings"
 )
-
-var quotes = []string{
-	"Look... behind you.",
-	"This will be fun!",
-	"The joke's on you!",
-	"Here we go!",
-	"March, march, march, march!",
-	"Now you see me, now you don't!",
-	"Just a little bit closer!",
-	"Why so serious?",
-	"For my next trick, I'll make you disappear!",
-	"How about a magic trick?",
-}
 
 var usageTemplate = `Usage:{{if .Runnable}}
 {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
@@ -48,7 +37,7 @@ Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "hermes",
-		Short: quotes[rand.Intn(len(quotes))],
+		Short: shaco.Quotes[rand.Intn(len(shaco.Quotes))],
 	}
 
 	args := strings.Split(m.Content, " ")
@@ -58,6 +47,8 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd.PersistentFlags().Bool("help", false, "none")
 	cmd.PersistentFlags().MarkHidden("help")
 	cmd.SetUsageTemplate(usageTemplate)
+	cmd.SilenceUsage = true
+	cmd.SilenceErrors = true
 
 	cmd.AddCommand(airhorn.Cmd())
 
@@ -65,7 +56,19 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 }
 
 func Execute(s *discordgo.Session, m *discordgo.MessageCreate) error {
-	return Cmd(s, m).ExecuteContext(discord.GenerateDiscordContext(s, m))
+	log.Println(m.Author.ID + ": " + m.Content)
+
+	err := Cmd(s, m).ExecuteContext(discord.GenerateDiscordContext(s, m))
+	if err != nil {
+		log.Println(err)
+		response := "> " + m.Content + "\n"
+		response += "The joke's on you!"
+		_, err = s.ChannelMessageSend(m.ChannelID, response)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	return err
 }
 
 type responseWriter struct {

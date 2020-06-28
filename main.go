@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/DylanMeador/hermes/cmd"
 	"github.com/bwmarrin/discordgo"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -47,13 +46,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, "hermes") {
-		go func() {
-			log.Println(m.Author.ID + ": " + m.Content)
-			err := cmd.Execute(s, m)
-			if err != nil {
-				log.Println(err)
-			}
-		}()
+		go cmd.Execute(s, m)
 	}
 }
 
