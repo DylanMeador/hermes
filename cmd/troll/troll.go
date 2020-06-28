@@ -119,7 +119,7 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		return s.GuildMemberMove(m.GuildID, m.Author.ID, afkChannelID)
+		//return s.GuildMemberMove(m.GuildID, m.Author.ID, afkChannelID)
 	}
 
 	return nil
