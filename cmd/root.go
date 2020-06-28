@@ -5,14 +5,27 @@ import (
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
+	"math/rand"
 	"strings"
 )
+
+var quotes = []string{
+	"Look... behind you.",
+	"This will be fun!",
+	"The joke's on you!",
+	"Here we go!",
+	"March, march, march, march!",
+	"Now you see me, now you don't!",
+	"Just a little bit closer!",
+	"Why so serious?",
+	"For my next trick, I'll make you disappear!",
+	"How about a magic trick?",
+}
 
 func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "hermes",
-		Short: "How about a magic trick?",
-		Long:  "For my next trick, I'll make you disappear!",
+		Short: quotes[rand.Intn(len(quotes))],
 	}
 
 	args := strings.Split(m.Content, " ")
@@ -33,7 +46,7 @@ type reponseWriter struct {
 	m *discordgo.MessageCreate
 }
 
-func(rw reponseWriter) Write(p []byte) (int, error) {
+func (rw reponseWriter) Write(p []byte) (int, error) {
 	message := string(p)
 	message = strings.TrimSpace(message)
 
