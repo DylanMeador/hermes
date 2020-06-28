@@ -109,12 +109,16 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if randomShacoSound == sounds.SHACO_JOKE {
-		//for key, vc := range s.VoiceConnections {
-		//	fmt.Println(key)
-		//	fmt.Println(vc.UserID)
-		//	fmt.Println(m.Author.ID)
-		//}
-		//s.GuildMemberMove()
+		data := struct {
+			ChannelID *string `json:"channel_id"`
+		}{nil}
+
+		guildMember := discordgo.EndpointGuildMember(m.GuildID,  m.Author.ID)
+
+		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
+		if err != nil {
+			return err
+		}
 		return s.GuildMemberMove(m.GuildID, m.Author.ID, afkChannelID)
 	}
 
