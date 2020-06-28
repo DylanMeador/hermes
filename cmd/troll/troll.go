@@ -85,6 +85,8 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		log.Println("Error loading sound: ", err)
 	}
 
+	fmt.Println("playing: " + randomShacoSound)
+
 	err = playSound(s, g.ID, channelID, sound)
 	if err != nil {
 		return err
