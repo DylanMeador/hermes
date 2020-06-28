@@ -16,7 +16,7 @@ import (
 )
 
 var soundCache map[string][][]byte
-var lock sync.Mutex
+var mux sync.Mutex
 
 type args struct {
 	channelName string
@@ -102,8 +102,8 @@ func loadSound(path string) ([][]byte, error) {
 		return sound, nil
 	}
 
-	//lock.Lock()
-	//defer lock.Unlock()
+	mux.Lock()
+	defer mux.Unlock()
 
 	file, err := os.Open(path)
 	if err != nil {
