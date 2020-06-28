@@ -56,7 +56,7 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 }
 
 func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
-	log.Println(m.Author.ID + ": " + m.Content)
+	log.Println(m.Author.String() + ": " + m.Content)
 
 	cmd := Cmd(s, m)
 	args := strings.Split(m.Content, " ")[1:]

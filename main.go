@@ -21,7 +21,6 @@ func main() {
 	}
 
 	dg.AddHandler(messageCreate)
-	dg.AddHandler(messageUpdate)
 
 	// Open the websocket and begin listening.
 	err = dg.Open()
@@ -47,16 +46,5 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, "hermes") {
 		go cmd.Execute(s, m)
-	}
-}
-
-func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
-	// Ignore all messages created by the bot itself
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	if strings.HasPrefix(m.Content, "hermes") {
-		s.ChannelMessageSend(m.ChannelID, "The joke's on you!")
 	}
 }
