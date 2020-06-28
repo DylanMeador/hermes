@@ -4,6 +4,7 @@ import (
 	"github.com/DylanMeador/hermes/cmd/airhorn"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/DylanMeador/hermes/emojis"
+	"github.com/DylanMeador/hermes/gifs"
 	"github.com/DylanMeador/hermes/shaco"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
@@ -41,8 +42,6 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 		Short: shaco.Quotes[rand.Intn(len(shaco.Quotes))],
 	}
 
-	args := strings.Split(m.Content, " ")
-	cmd.SetArgs(args[1:])
 	cmd.SetOut(responseWriter{s, m})
 	cmd.SetHelpCommand(&cobra.Command{Use: "nope", Hidden: true})
 	cmd.PersistentFlags().Bool("help", false, "none")
@@ -56,18 +55,29 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	return cmd
 }
 
-func Execute(s *discordgo.Session, m *discordgo.MessageCreate) error {
+func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Println(m.Author.ID + ": " + m.Content)
 
-	err := Cmd(s, m).ExecuteContext(discord.GenerateDiscordContext(s, m))
-	if err != nil {
-		log.Println(err)
+	cmd := Cmd(s, m)
+	args := strings.Split(m.Content, " ")
+
+	if err := cmd.ValidateArgs(args); err != nil {
 		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, emojis.POOP)
 		if err != nil {
 			log.Println(err)
 		}
+	} else {
+		cmd.SetArgs(args)
+		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
+			log.Println(err)
+			_, err = s.ChannelMessageSend(m.ChannelID, gifs.BUG)
+			if err != nil {
+				log.Println(err)
+			}
+		}
 	}
-	return err
+
+	return
 }
 
 type responseWriter struct {

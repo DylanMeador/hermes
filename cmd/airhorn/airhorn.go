@@ -2,7 +2,6 @@ package airhorn
 
 import (
 	"encoding/binary"
-	"fmt"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
@@ -28,7 +27,7 @@ func Cmd() *cobra.Command {
 		Use:    "airhorn",
 		Short:  "An airhorn sound will play in your current channel",
 		PreRun: a.preRun,
-		Run:    a.run,
+		RunE:    a.run,
 	}
 
 	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the airhorn in")
@@ -46,20 +45,20 @@ func (a *args) preRun(cmd *cobra.Command, args []string) {
 	})
 }
 
-func (a *args) run(cmd *cobra.Command, args []string) {
+func (a *args) run(cmd *cobra.Command, args []string) error {
 	s, m := discord.GetSessionAndMessageFromContext(cmd.Context())
 
 	// Find the channel that the message came from.
 	c, err := s.State.Channel(m.ChannelID)
 	if err != nil {
 		// Could not find channel.
-		return
+		return err
 	}
 	// Find the guild for that channel.
 	g, err := s.State.Guild(c.GuildID)
 	if err != nil {
 		// Could not find guild.
-		return
+		return err
 	}
 
 	var channelID string
@@ -72,6 +71,7 @@ func (a *args) run(cmd *cobra.Command, args []string) {
 		}
 		if len(channelID) == 0 {
 			cmd.PrintErrln("Channel " + a.channelName + " does not exist.")
+			return nil
 		}
 	} else {
 		// Look for the message sender in that guild's current voice states.
@@ -80,20 +80,13 @@ func (a *args) run(cmd *cobra.Command, args []string) {
 				channelID = vs.ChannelID
 			}
 		}
-
 		if len(channelID) == 0 {
 			cmd.PrintErrln("You are not in a voice channel.")
+			return nil
 		}
 	}
 
-	if len(channelID) > 0 {
-		err = playSound(s, g.ID, channelID)
-		if err != nil {
-			fmt.Println("Error playing sound:", err)
-		}
-	}
-
-	return
+	return playSound(s, g.ID, channelID)
 }
 
 // loadSound attempts to load an encoded sound file from disk.
