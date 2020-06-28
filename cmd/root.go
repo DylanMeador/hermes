@@ -22,6 +22,20 @@ var quotes = []string{
 	"How about a magic trick?",
 }
 
+var usageTemplate = `Usage:{{if .Runnable}}
+  {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+`
+
 func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "hermes",
@@ -30,9 +44,10 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 
 	args := strings.Split(m.Content, " ")
 	cmd.SetArgs(args[1:])
-	cmd.SetOut(reponseWriter{s, m})
+	cmd.SetOut(responseWriter{s, m})
+	cmd.SetErr(errWriter{s, m})
 	cmd.SilenceUsage = true
-	cmd.SetHelpTemplate("")
+	cmd.SetUsageTemplate(usageTemplate)
 
 	cmd.AddCommand(airhorn.Cmd())
 
@@ -43,12 +58,17 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	return Cmd(s, m).ExecuteContext(discord.GenerateDiscordContext(s, m))
 }
 
-type reponseWriter struct {
+type responseWriter struct {
 	s *discordgo.Session
 	m *discordgo.MessageCreate
 }
 
-func (rw reponseWriter) Write(p []byte) (int, error) {
+type errWriter struct {
+	s *discordgo.Session
+	m *discordgo.MessageCreate
+}
+
+func (rw responseWriter) Write(p []byte) (int, error) {
 	message := string(p)
 	message = strings.TrimSpace(message)
 
@@ -56,6 +76,19 @@ func (rw reponseWriter) Write(p []byte) (int, error) {
 		return len(p), nil
 	}
 
+	_, err := rw.s.ChannelMessageSend(rw.m.ChannelID, message)
+	return len(p), err
+}
+
+func (rw errWriter) Write(p []byte) (int, error) {
+	message := string(p)
+	message = strings.TrimSpace(message)
+
+	if len(message) == 0 {
+		return len(p), nil
+	}
+
+	message = "> " + rw.m.Content + "\n" + message
 	_, err := rw.s.ChannelMessageSend(rw.m.ChannelID, message)
 	return len(p), err
 }
