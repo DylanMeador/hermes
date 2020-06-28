@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-
 	token := "NzI2NjQyNTU0OTUwMzg1NjY1.XvgQtA.Sr3yaJ1No_6bnJWLBMnCXNFum1g"
 
 	// Create a new Discord session using the provided bot token.
