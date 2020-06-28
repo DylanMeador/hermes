@@ -1,6 +1,7 @@
 package troll
 
 import (
+	"fmt"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/DylanMeador/hermes/sounds"
 	"github.com/bwmarrin/discordgo"
@@ -89,9 +90,14 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//if randomShacoSound == sounds.SHACO_JOKE {
-	//	return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
-	//}
+	if randomShacoSound == sounds.SHACO_JOKE {
+		for key, vc := range s.VoiceConnections {
+			fmt.Println(key)
+			fmt.Println(vc.UserID)
+			fmt.Println(m.Author.ID)
+		}
+		//return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
+	}
 
 	return nil
 }
