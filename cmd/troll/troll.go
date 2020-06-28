@@ -93,12 +93,13 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if randomShacoSound == sounds.SHACO_JOKE {
-		for key, vc := range s.VoiceConnections {
-			fmt.Println(key)
-			fmt.Println(vc.UserID)
-			fmt.Println(m.Author.ID)
-		}
-		//return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
+		//for key, vc := range s.VoiceConnections {
+		//	fmt.Println(key)
+		//	fmt.Println(vc.UserID)
+		//	fmt.Println(m.Author.ID)
+		//}
+		//s.GuildMemberMove()
+		return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
 	}
 
 	return nil
