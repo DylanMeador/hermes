@@ -31,6 +31,8 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	args := strings.Split(m.Content, " ")
 	cmd.SetArgs(args[1:])
 	cmd.SetOut(reponseWriter{s, m})
+	cmd.SilenceUsage = true
+	cmd.SetHelpTemplate("")
 
 	cmd.AddCommand(airhorn.Cmd())
 
