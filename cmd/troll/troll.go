@@ -89,9 +89,9 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if randomShacoSound == sounds.SHACO_JOKE {
-		return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
-	}
+	//if randomShacoSound == sounds.SHACO_JOKE {
+	//	return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
+	//}
 
 	return nil
 }
@@ -102,8 +102,8 @@ func loadSound(path string) ([][]byte, error) {
 		return sound, nil
 	}
 
-	lock.Lock()
-	defer lock.Unlock()
+	//lock.Lock()
+	//defer lock.Unlock()
 
 	file, err := os.Open(path)
 	if err != nil {
