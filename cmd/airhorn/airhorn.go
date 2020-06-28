@@ -1,9 +1,9 @@
 package airhorn
 
 import (
-	"encoding/binary"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/bwmarrin/discordgo"
+	"github.com/jonas747/dca"
 	"github.com/spf13/cobra"
 	"io"
 	"log"
@@ -104,40 +104,58 @@ func loadSound(path string) ([][]byte, error) {
 		return nil, err
 	}
 
-	var opuslen uint16
 	var buffer [][]byte
 
-	for {
-		// Read opus frame length from dca file.
-		err = binary.Read(file, binary.LittleEndian, &opuslen)
+	decoder := dca.NewDecoder(file)
 
-		// If this is the end of the file, just return.
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			err := file.Close()
-			if err != nil {
+	for {
+		frame, err := decoder.OpusFrame()
+		if err != nil {
+			if err != io.EOF {
 				return nil, err
 			}
-			return buffer, nil
+			break
 		}
 
-		if err != nil {
-			log.Println("Error reading from dca file :", err)
-			return nil, err
-		}
-
-		// Read encoded pcm from dca file.
-		InBuf := make([]byte, opuslen)
-		err = binary.Read(file, binary.LittleEndian, &InBuf)
-
-		// Should not be any end of file errors
-		if err != nil {
-			log.Println("Error reading from dca file :", err)
-			return nil, err
-		}
-
-		// Append encoded pcm data to the soundBuffer.
-		buffer = append(buffer, InBuf)
+		buffer = append(buffer, frame)
 	}
+
+	return buffer, nil
+
+	//var opuslen int16
+	//var buffer [][]byte
+	//
+	//for {
+	//	// Read opus frame length from dca file.
+	//	err = binary.Read(file, binary.LittleEndian, &opuslen)
+	//
+	//	// If this is the end of the file, just return.
+	//	if err == io.EOF || err == io.ErrUnexpectedEOF {
+	//		err := file.Close()
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		return buffer, nil
+	//	}
+	//
+	//	if err != nil {
+	//		log.Println("Error reading from dca file :", err)
+	//		return nil, err
+	//	}
+	//
+	//	// Read encoded pcm from dca file.
+	//	InBuf := make([]byte, opuslen)
+	//	err = binary.Read(file, binary.LittleEndian, &InBuf)
+	//
+	//	// Should not be any end of file errors
+	//	if err != nil {
+	//		log.Println("Error reading from dca file :", err)
+	//		return nil, err
+	//	}
+	//
+	//	// Append encoded pcm data to the soundBuffer.
+	//	buffer = append(buffer, InBuf)
+	//}
 }
 
 // playSound plays the current soundBuffer to the provided channel.
