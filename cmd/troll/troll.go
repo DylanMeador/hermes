@@ -91,6 +91,10 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 
 	randomShacoSound := sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))]
 
+	if a.forceJoke {
+		randomShacoSound = sounds.SHACO_JOKE
+	}
+
 	sound, err := loadSound(randomShacoSound)
 	if err != nil {
 		log.Println("Error loading sound: ", err)
