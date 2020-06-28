@@ -41,11 +41,11 @@ func (a *args) preRun(cmd *cobra.Command, args []string) {
 	// Load the sound file.
 	once.Do(func() {
 		var err error
-		soundBuffer1, err = loadSound("sounds/blame.dca")
+		soundBuffer1, err = loadSound("cmd/airhorn/airhorn.dca")
 		if err != nil {
 			log.Println("Error loading sound: ", err)
 		}
-		soundBuffer2, err = loadSound("sounds/shaco/joke.dca")
+		soundBuffer2, err = loadSound("cmd/airhorn/airhorn.dca")
 		if err != nil {
 			log.Println("Error loading sound: ", err)
 		}
