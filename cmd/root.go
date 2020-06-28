@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/DylanMeador/hermes/cmd/airhorn"
+	"github.com/DylanMeador/hermes/cmd/troll"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/DylanMeador/hermes/emojis"
 	"github.com/DylanMeador/hermes/gifs"
@@ -48,7 +48,7 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
-	cmd.AddCommand(airhorn.Cmd())
+	cmd.AddCommand(troll.Cmd())
 
 	return cmd
 }

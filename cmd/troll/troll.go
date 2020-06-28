@@ -1,22 +1,22 @@
-package airhorn
+package troll
 
 import (
 	"github.com/DylanMeador/hermes/discord"
+	"github.com/DylanMeador/hermes/sounds"
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
 	"github.com/spf13/cobra"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"sync"
 	"time"
 )
 
-var soundBuffer1 = make([][]byte, 0)
-var soundBuffer2 = make([][]byte, 0)
-
-var once sync.Once
+var soundCache map[string][][]byte
+var lock sync.Mutex
 
 type args struct {
 	channelName string
@@ -26,30 +26,14 @@ func Cmd() *cobra.Command {
 	a := &args{}
 
 	cmd := &cobra.Command{
-		Use:    "airhorn",
-		Short:  "An airhorn sound will play in your current channel",
-		PreRun: a.preRun,
+		Use:    "troll",
+		Short:  "Shaco sounds...mostly",
 		RunE:   a.run,
 	}
 
-	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the airhorn in")
+	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the troll in")
 
 	return cmd
-}
-
-func (a *args) preRun(cmd *cobra.Command, args []string) {
-	// Load the sound file.
-	once.Do(func() {
-		var err error
-		soundBuffer1, err = loadSound("sounds/blame.dca")
-		if err != nil {
-			log.Println("Error loading sound: ", err)
-		}
-		soundBuffer2, err = loadSound("sounds/shaco/joke.dca")
-		if err != nil {
-			log.Println("Error loading sound: ", err)
-		}
-	})
 }
 
 func (a *args) run(cmd *cobra.Command, args []string) error {
@@ -93,11 +77,34 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return playSound(s, g.ID, channelID)
+	randomShacoSound := sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))]
+
+	sound, err := loadSound(randomShacoSound)
+	if err != nil {
+		log.Println("Error loading sound: ", err)
+	}
+
+	err = playSound(s, g.ID, channelID, sound)
+	if err != nil {
+		return err
+	}
+
+	if randomShacoSound == sounds.SHACO_JOKE {
+		return s.GuildMemberMove(m.GuildID, m.Author.ID, "")
+	}
+
+	return nil
 }
 
 // loadSound attempts to load an encoded sound file from disk.
 func loadSound(path string) ([][]byte, error) {
+	if sound, ok := soundCache[path]; ok {
+		return sound, nil
+	}
+
+	lock.Lock()
+	defer lock.Unlock()
+
 	file, err := os.Open(path)
 	if err != nil {
 		log.Println("Error opening dca file :", err)
@@ -124,7 +131,7 @@ func loadSound(path string) ([][]byte, error) {
 }
 
 // playSound plays the current soundBuffer to the provided channel.
-func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
+func playSound(s *discordgo.Session, guildID, channelID string, sound [][]byte) (err error) {
 	// Join the provided voice channel.
 	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
 	if err != nil {
@@ -138,11 +145,7 @@ func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 	vc.Speaking(true)
 
 	// Send the soundBuffer data.
-	for _, buff := range soundBuffer1 {
-		vc.OpusSend <- buff
-	}
-
-	for _, buff := range soundBuffer2 {
+	for _, buff := range sound {
 		vc.OpusSend <- buff
 	}
 
