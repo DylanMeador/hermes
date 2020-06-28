@@ -59,13 +59,13 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var channelID, afkChannelID string
-	for _, c := range g.Channels {
-		if c.Type == discordgo.ChannelTypeGuildVoice && strings.EqualFold(c.Name, "afk") {
-			afkChannelID = c.ID
-			break
-		}
-	}
+	var channelID string
+	//for _, c := range g.Channels {
+	//	if c.Type == discordgo.ChannelTypeGuildVoice && strings.EqualFold(c.Name, "afk") {
+	//		afkChannelID = c.ID
+	//		break
+	//	}
+	//}
 	if len(a.channelName) > 0 {
 		for _, c := range g.Channels {
 			if c.Type == discordgo.ChannelTypeGuildVoice && strings.EqualFold(c.Name, a.channelName) {
