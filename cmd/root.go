@@ -5,7 +5,6 @@ import (
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
-	"log"
 	"strings"
 )
 
