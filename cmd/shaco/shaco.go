@@ -2,6 +2,7 @@ package shaco
 
 import (
 	"fmt"
+	"github.com/DylanMeador/hermes/cmd"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/DylanMeador/hermes/sounds"
 	"github.com/bwmarrin/discordgo"
@@ -54,11 +55,8 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
-func (a *args) run(cmd *cobra.Command, args []string) error {
-	mux.Lock()
-	defer mux.Unlock()
-
-	s, m := discord.GetSessionAndMessageFromContext(cmd.Context())
+func (a *args) run(command *cobra.Command, args []string) error {
+	s, m := discord.GetSessionAndMessageFromContext(command.Context())
 
 	// Find the channel that the message came from.
 	c, err := s.State.Channel(m.ChannelID)
@@ -82,8 +80,8 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 			}
 		}
 		if len(channelID) == 0 {
-			cmd.PrintErrln("Channel " + a.channelName + " does not exist.")
-			return nil
+			command.PrintErrln("Channel " + a.channelName + " does not exist.")
+			return cmd.CommandArgumentErr
 		}
 	} else {
 		// Look for the message sender in that guild's current voice states.
@@ -92,11 +90,19 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 				channelID = vs.ChannelID
 			}
 		}
-		if len(channelID) == 0 {
-			cmd.PrintErrln("You are not in a voice channel.")
-			return nil
-		}
 	}
+
+	if channelID != "" {
+		return a.playRandomShacoSound(s, m, channelID)
+	}
+
+	_, err = s.ChannelMessageSend(m.ChannelID, quotes[rand.Intn(len(quotes))])
+	return err
+}
+
+func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCreate, channelID string) error {
+	mux.Lock()
+	defer mux.Unlock()
 
 	randomShacoSound := sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))]
 
@@ -111,7 +117,7 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("playing: " + randomShacoSound)
 
-	err = playSound(s, g.ID, channelID, sound)
+	err = playSound(s, m.GuildID, channelID, sound)
 	if err != nil {
 		return err
 	}
@@ -129,7 +135,6 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 		}
 		//return s.GuildMemberMove(m.GuildID, m.Author.ID, "afkChannelID")
 	}
-
 	return nil
 }
 

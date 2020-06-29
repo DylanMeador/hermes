@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"github.com/DylanMeador/hermes/cmd/shaco"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/DylanMeador/hermes/emojis"
@@ -12,6 +13,8 @@ import (
 	"log"
 	"strings"
 )
+
+var CommandArgumentErr = errors.New("invalid command arguments")
 
 var usageTemplate = `Usage:{{if .Runnable}}
 {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
@@ -76,7 +79,12 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 		addReactions(s, m, errEmojis...)
 	} else {
 		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
-			bug(err, s, m)
+			if err == CommandArgumentErr {
+				addReactions(s, m, emojis.POOP)
+				addReactions(s, m, emojis.A, emojis.R, emojis.G)
+			} else {
+				bug(err, s, m)
+			}
 		}
 	}
 }
