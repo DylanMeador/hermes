@@ -27,11 +27,6 @@ func Cmd() *cobra.Command {
 func (a *args) run(command *cobra.Command, args []string) error {
 	s, m := discord.GetSessionAndMessageFromContext(command.Context())
 
-	g, err := s.State.Guild(m.GuildID)
-	if err != nil {
-		return err
-	}
-
 	invite := discordgo.Invite{
 		Temporary: a.temporaryMembership,
 	}
