@@ -61,8 +61,6 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	args := strings.Split(m.Content, " ")[1:]
 	cmd.SetArgs(args)
 
-	cmd.find
-
 	//_, _, flagErr := cmd.Traverse(args)
 	//flagErr := cmd.ParseFlags(args)
 	targetCommand, targetArgs, commandErr := cmd.Find(args)
