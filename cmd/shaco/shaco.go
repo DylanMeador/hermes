@@ -34,8 +34,9 @@ var soundCache map[string][][]byte
 var mux sync.Mutex
 
 type args struct {
-	channelName string
-	forceJoke   bool
+	channelName    string
+	forceDisappear bool
+	forceJoke      bool
 }
 
 func Cmd() *cobra.Command {
@@ -48,8 +49,10 @@ func Cmd() *cobra.Command {
 		RunE:  a.run,
 	}
 
-	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the shaco in")
-	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played")
+	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to let Shaco loose in")
+	cmd.PersistentFlags().BoolVarP(&a.forceDisappear, "disappear", "d", false, "force the disappear voice to be played and user removed")
+	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played and user deafened/muted")
+	cmd.PersistentFlags().MarkHidden("disappear")
 	cmd.PersistentFlags().MarkHidden("joke")
 
 	return cmd
@@ -106,6 +109,9 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 
 	randomShacoSound := sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))]
 
+	if a.forceDisappear {
+		randomShacoSound = sounds.SHACO_ATTACK3
+	}
 	if a.forceJoke {
 		randomShacoSound = sounds.SHACO_JOKE
 	}
@@ -122,6 +128,7 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 		return err
 	}
 
+	// For my next trick, I'll make you disappear!
 	if randomShacoSound == sounds.SHACO_JOKE {
 		data := struct {
 			ChannelID *string `json:"channel_id"`
@@ -135,6 +142,21 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 		}
 		//return s.GuildMemberMove(m.GuildID, m.Author.ID, "afkChannelID")
 	}
+
+	// The joke's on you!
+	if randomShacoSound == sounds.SHACO_ATTACK3 {
+		data := struct {
+			Deafen bool `json:"deaf"`
+			Mute   bool `json:"mute"`
+		}{true, true}
+
+		guildMember := discordgo.EndpointGuildMember(m.GuildID, m.Author.ID)
+		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
