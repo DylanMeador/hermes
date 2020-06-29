@@ -35,6 +35,6 @@ func (a *args) run(command *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = s.ChannelMessageSend(m.ChannelID, "https://discorg.gg/" + i.Code)
+	_, err = s.ChannelMessageSend(m.ChannelID, "https://discord.gg/" + i.Code)
 	return err
 }

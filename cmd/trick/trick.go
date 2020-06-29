@@ -44,7 +44,7 @@ func Cmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "trick",
-		Short: "Shaco, the demon jester",
+		Short: "the demon jester, Shaco",
 		Long:  "Crafted long ago as a plaything for a lonely prince, the enchanted marionette Shaco now delights in murder and mayhem.",
 		RunE:  a.run,
 	}
