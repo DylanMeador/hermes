@@ -2,8 +2,8 @@ package shaco
 
 import (
 	"fmt"
-	"github.com/DylanMeador/hermes/cmd"
 	"github.com/DylanMeador/hermes/discord"
+	"github.com/DylanMeador/hermes/errors"
 	"github.com/DylanMeador/hermes/sounds"
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
@@ -81,7 +81,7 @@ func (a *args) run(command *cobra.Command, args []string) error {
 		}
 		if len(channelID) == 0 {
 			command.PrintErrln("Channel " + a.channelName + " does not exist.")
-			return cmd.CommandArgumentErr
+			return errors.CommandArgumentErr
 		}
 	} else {
 		// Look for the message sender in that guild's current voice states.
