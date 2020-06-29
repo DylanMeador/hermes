@@ -1,7 +1,7 @@
 package invite
 
 import (
-	"github.com/DylanMeador/hermes/discord"
+	"github.com/DylanMeador/hermes/pkg/discord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
 )

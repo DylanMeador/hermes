@@ -2,9 +2,9 @@ package trick
 
 import (
 	"fmt"
-	"github.com/DylanMeador/hermes/discord"
-	"github.com/DylanMeador/hermes/errors"
-	"github.com/DylanMeador/hermes/sounds"
+	"github.com/DylanMeador/hermes/pkg/discord"
+	"github.com/DylanMeador/hermes/pkg/errors"
+	"github.com/DylanMeador/hermes/pkg/sounds"
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
 	"github.com/spf13/cobra"
