@@ -110,10 +110,10 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 	randomShacoSound := sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))]
 
 	if a.forceDisappear {
-		randomShacoSound = sounds.SHACO_ATTACK3
+		randomShacoSound = sounds.SHACO_JOKE
 	}
 	if a.forceJoke {
-		randomShacoSound = sounds.SHACO_JOKE
+		randomShacoSound = sounds.SHACO_ATTACK3
 	}
 
 	sound, err := loadSound(randomShacoSound)
@@ -128,8 +128,8 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 		return err
 	}
 
-	// For my next trick, I'll make you disappear!
 	if randomShacoSound == sounds.SHACO_JOKE {
+		// For my next trick, I'll make you disappear!
 		data := struct {
 			ChannelID *string `json:"channel_id"`
 		}{nil}
@@ -140,11 +140,8 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 		if err != nil {
 			return err
 		}
-		//return s.GuildMemberMove(m.GuildID, m.Author.ID, "afkChannelID")
-	}
-
-	// The joke's on you!
-	if randomShacoSound == sounds.SHACO_ATTACK3 {
+	}else if randomShacoSound == sounds.SHACO_ATTACK3 {
+		// The joke's on you!
 		data := struct {
 			Deafen bool `json:"deaf"`
 			Mute   bool `json:"mute"`
