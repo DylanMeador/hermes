@@ -11,10 +11,7 @@ import (
 )
 
 func main() {
-	token := "NzI2NjQyNTU0OTUwMzg1NjY1.XvgQtA.Sr3yaJ1No_6bnJWLBMnCXNFum1g"
-
-	// Create a new Discord session using the provided bot token.
-	dg, err := discordgo.New("Bot " + token)
+	dg, err := discordgo.New("Bot " + os.Getenv("TOKEN"))
 	if err != nil {
 		fmt.Println("Error creating Discord session: ", err)
 		return
@@ -45,6 +42,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, "hermes") {
+		// TODO: handle concurrent requests more cleanly
 		go cmd.Execute(s, m)
 	}
 }
