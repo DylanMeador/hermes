@@ -1,4 +1,4 @@
-package shaco
+package trick
 
 import (
 	"fmt"
@@ -43,15 +43,15 @@ func Cmd() *cobra.Command {
 	a := &args{}
 
 	cmd := &cobra.Command{
-		Use:   "shaco",
+		Use:   "trick",
 		Short: "Shaco, the demon jester",
 		Long:  "Crafted long ago as a plaything for a lonely prince, the enchanted marionette Shaco now delights in murder and mayhem.",
 		RunE:  a.run,
 	}
 
-	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to let Shaco loose in")
-	cmd.PersistentFlags().BoolVarP(&a.forceDisappear, "disappear", "d", false, "force the disappear voice to be played and user removed")
-	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played and user deafened/muted")
+	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play tricks in")
+	cmd.PersistentFlags().BoolVarP(&a.forceDisappear, "disappear", "d", false, "force the disappear voice to be played and user removed from voice channel")
+	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played and user muted")
 	cmd.PersistentFlags().MarkHidden("disappear")
 	cmd.PersistentFlags().MarkHidden("joke")
 
@@ -75,6 +75,15 @@ func (a *args) run(command *cobra.Command, args []string) error {
 	}
 
 	var channelID string
+	userIsInChannel := false
+	// Look for the message sender in that guild's current voice states.
+	for _, vs := range g.VoiceStates {
+		if vs.UserID == m.Author.ID {
+			channelID = vs.ChannelID
+			userIsInChannel = true
+			break
+		}
+	}
 	if len(a.channelName) > 0 {
 		for _, c := range g.Channels {
 			if c.Type == discordgo.ChannelTypeGuildVoice && strings.EqualFold(c.Name, a.channelName) {
@@ -86,24 +95,17 @@ func (a *args) run(command *cobra.Command, args []string) error {
 			command.PrintErrln("Channel " + a.channelName + " does not exist.")
 			return errors.CommandArgumentErr
 		}
-	} else {
-		// Look for the message sender in that guild's current voice states.
-		for _, vs := range g.VoiceStates {
-			if vs.UserID == m.Author.ID {
-				channelID = vs.ChannelID
-			}
-		}
 	}
 
 	if channelID != "" {
-		return a.playRandomShacoSound(s, m, channelID)
+		return a.playRandomShacoSound(s, m, channelID, userIsInChannel)
 	}
 
 	_, err = s.ChannelMessageSend(m.ChannelID, quotes[rand.Intn(len(quotes))])
 	return err
 }
 
-func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCreate, channelID string) error {
+func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCreate, channelID string, userInChannel bool) error {
 	mux.Lock()
 	defer mux.Unlock()
 
@@ -119,6 +121,7 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 	sound, err := loadSound(randomShacoSound)
 	if err != nil {
 		log.Println("Error loading sound: ", err)
+		return err
 	}
 
 	fmt.Println("playing: " + randomShacoSound)
@@ -126,6 +129,10 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 	err = playSound(s, m.GuildID, channelID, sound)
 	if err != nil {
 		return err
+	}
+
+	if !userInChannel {
+		return nil
 	}
 
 	if randomShacoSound == sounds.SHACO_JOKE {
@@ -143,12 +150,44 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 	}else if randomShacoSound == sounds.SHACO_ATTACK3 {
 		// The joke's on you!
 		data := struct {
-			Deafen bool `json:"deaf"`
 			Mute   bool `json:"mute"`
-		}{true, true}
+		}{ true }
 
 		guildMember := discordgo.EndpointGuildMember(m.GuildID, m.Author.ID)
 		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
+		if err != nil {
+			return err
+		}
+
+		sound, err = loadSound(sounds.SHACO_LAUGH2)
+		if err != nil {
+			log.Println("Error loading sound: ", err)
+			return err
+		}
+
+		time.Sleep(time.Second * 5)
+
+		err = playSound(s, m.GuildID, channelID, sound)
+		if err != nil {
+			return err
+		}
+
+		time.Sleep(time.Second * 15)
+
+		data.Mute = false
+		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
+		if err != nil {
+			return err
+		}
+
+		time.Sleep(time.Second * 2)
+
+		sound, err = loadSound(sounds.SHACO_LAUGH3)
+		if err != nil {
+			log.Println("Error loading sound: ", err)
+			return err
+		}
+		err = playSound(s, m.GuildID, channelID, sound)
 		if err != nil {
 			return err
 		}

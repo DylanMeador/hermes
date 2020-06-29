@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/DylanMeador/hermes/cmd/shaco"
+	"github.com/DylanMeador/hermes/cmd/trick"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/DylanMeador/hermes/emojis"
 	"github.com/DylanMeador/hermes/errors"
@@ -49,7 +49,7 @@ func Cmd(out io.Writer) *cobra.Command {
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
-	cmd.AddCommand(shaco.Cmd())
+	cmd.AddCommand(trick.Cmd())
 
 	return cmd
 }
