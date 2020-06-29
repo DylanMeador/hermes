@@ -8,4 +8,5 @@ require (
 	github.com/jonas747/dca v0.0.0-20200609191102-fe85ccf0947a
 	github.com/jonas747/ogg v0.0.0-20161220051205-b4f6f4cf3757 // indirect
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.3
 )

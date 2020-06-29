@@ -1,4 +1,4 @@
-package troll
+package shaco
 
 import (
 	"fmt"
@@ -16,6 +16,19 @@ import (
 	"time"
 )
 
+var quotes = []string{
+	"Look... behind you.",
+	"This will be fun!",
+	"The joke's on you!",
+	"Here we go!",
+	"March, march, march, march!",
+	"Now you see me, now you don't!",
+	"Just a little bit closer!",
+	"Why so serious?",
+	"For my next trick, I'll make you disappear!",
+	"How about a magic trick?",
+}
+
 var soundCache map[string][][]byte
 var mux sync.Mutex
 
@@ -28,12 +41,13 @@ func Cmd() *cobra.Command {
 	a := &args{}
 
 	cmd := &cobra.Command{
-		Use:   "troll",
-		Short: "Shaco sounds...mostly",
+		Use:   "shaco",
+		Short: "Shaco, the demon jester",
+		Long:  "Crafted long ago as a plaything for a lonely prince, the enchanted marionette Shaco now delights in murder and mayhem.",
 		RunE:  a.run,
 	}
 
-	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the troll in")
+	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play the shaco in")
 	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played")
 	cmd.PersistentFlags().MarkHidden("joke")
 
@@ -107,7 +121,7 @@ func (a *args) run(cmd *cobra.Command, args []string) error {
 			ChannelID *string `json:"channel_id"`
 		}{nil}
 
-		guildMember := discordgo.EndpointGuildMember(m.GuildID,  m.Author.ID)
+		guildMember := discordgo.EndpointGuildMember(m.GuildID, m.Author.ID)
 
 		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
 		if err != nil {

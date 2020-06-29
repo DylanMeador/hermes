@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"github.com/DylanMeador/hermes/cmd/troll"
+	"github.com/DylanMeador/hermes/cmd/shaco"
 	"github.com/DylanMeador/hermes/discord"
 	"github.com/DylanMeador/hermes/emojis"
 	"github.com/DylanMeador/hermes/gifs"
-	"github.com/DylanMeador/hermes/shaco"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"io"
 	"log"
-	"math/rand"
 	"strings"
 )
 
@@ -35,20 +35,20 @@ Global Flags:
 Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}`
 
-func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
+func Cmd(out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "hermes",
-		Short: shaco.Quotes[rand.Intn(len(shaco.Quotes))],
+		Short: "A conductor of souls into the afterlife.",
 	}
 
-	cmd.SetOut(responseWriter{s, m})
+	cmd.SetOut(out)
 	cmd.SetHelpCommand(&cobra.Command{Use: "nope", Hidden: true})
 	cmd.InitDefaultHelpFlag()
 	cmd.SetUsageTemplate(usageTemplate)
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
-	cmd.AddCommand(troll.Cmd())
+	cmd.AddCommand(shaco.Cmd())
 
 	return cmd
 }
@@ -56,19 +56,15 @@ func Cmd(s *discordgo.Session, m *discordgo.MessageCreate) *cobra.Command {
 func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Println(m.Author.String() + ": " + m.Content)
 
-	cmd := Cmd(s, m)
-
 	args := strings.Split(m.Content, " ")[1:]
+	cmd := Cmd(responseWriter{s, m})
 	cmd.SetArgs(args)
 
-	//_, _, flagErr := cmd.Traverse(args)
-	//flagErr := cmd.ParseFlags(args)
 	targetCommand, _, commandErr := cmd.Find(args)
-	flagErr := targetCommand.ParseFlags(args)
+	flagErr := targetCommand.Flags().Parse(args)
 
 	var errEmojis []string
-
-	if flagErr != nil {
+	if flagErr != nil && flagErr != pflag.ErrHelp {
 		errEmojis = append(errEmojis, emojis.FLAG)
 	}
 	if commandErr != nil {
