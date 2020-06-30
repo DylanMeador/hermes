@@ -1,4 +1,4 @@
-package pentakill
+package hype
 
 import (
 	"github.com/DylanMeador/hermes/pkg/discord"
@@ -18,12 +18,12 @@ func Cmd() *cobra.Command {
 	a := &args{}
 
 	cmd := &cobra.Command{
-		Use:   "pentakill",
-		Short: "celebrate a pentakill",
+		Use:   "hype",
+		Short: "hype ya homies",
 		RunE:  a.run,
 	}
 
-	cmd.PersistentFlags().StringVarP(&a.mention, "user", "u", "", "@user that got the pentakill")
+	cmd.PersistentFlags().StringVarP(&a.mention, "user", "u", "", "@user that deserves the hype")
 	cmd.Hidden = true
 
 	return cmd
