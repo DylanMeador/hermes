@@ -2,7 +2,10 @@ package discord
 
 import (
 	"context"
+	"github.com/DylanMeador/hermes/pkg/errors"
 	"github.com/bwmarrin/discordgo"
+	"log"
+	"strings"
 )
 
 const (
@@ -35,4 +38,24 @@ func (hc *HermesCommand) GetCommandUserVoiceChannelID() (string, error) {
 		}
 	}
 	return "", nil
+}
+
+func (hc *HermesCommand) GetUserIDFromMention(mention string) (*discordgo.User, error) {
+	userID := mention
+
+	if !strings.HasPrefix(userID, "<@") || !strings.HasSuffix(userID, ">") {
+		return nil, errors.CommandArgumentErr
+	} else {
+		userID = strings.TrimPrefix(userID, "<@")
+		userID = strings.TrimPrefix(userID, "!") // ! is optional in @mention I think
+		userID = strings.TrimSuffix(userID, ">")
+	}
+
+	user, err := hc.Session.User(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.CommandArgumentErr
+	}
+
+	return user, nil
 }

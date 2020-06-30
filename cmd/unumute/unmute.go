@@ -3,11 +3,8 @@ package unmute
 import (
 	"github.com/DylanMeador/hermes/pkg/discord"
 	"github.com/DylanMeador/hermes/pkg/emojis"
-	"github.com/DylanMeador/hermes/pkg/errors"
 	"github.com/DylanMeador/hermes/pkg/gifs"
 	"github.com/spf13/cobra"
-	"log"
-	"strings"
 )
 
 type args struct {
@@ -36,24 +33,17 @@ func (a *args) run(command *cobra.Command, args []string) error {
 	if userID == "" {
 		userID = hc.Message.Author.ID
 	} else {
-		if !strings.HasPrefix(userID, "<@") || !strings.HasSuffix(userID, ">") {
-			return errors.CommandArgumentErr
-		} else {
-			userID = strings.TrimPrefix(userID, "<@")
-			userID = strings.TrimPrefix(userID, "!") // ! is optional in @mention I think
-			userID = strings.TrimSuffix(userID, ">")
+		user, err := hc.GetUserIDFromMention(userID)
+		if err != nil {
+			return err
+		}
 
-			_, err := hc.Session.User(userID)
-			if err != nil {
-				log.Println(err)
-				return errors.CommandArgumentErr
-			}
+		userID = user.ID
 
-			if hc.Session.State.User.ID == userID {
-				hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.CURSING)
-				_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, gifs.ITS_A_TRAP)
-				return err
-			}
+		if hc.Session.State.User.ID == userID {
+			hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.CURSING)
+			_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, gifs.ITS_A_TRAP)
+			return err
 		}
 	}
 

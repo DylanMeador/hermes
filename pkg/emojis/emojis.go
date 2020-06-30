@@ -6,6 +6,8 @@ const (
 	LAUGHING = "😆"
 	FACEPALM = "🤦"
 	CURSING = "🤬"
+	PARTYING = "🥳"
+	CONFETTI = "🎊"
 	ROFL = "🤣"
 	CLOWN = "🤡"
 	JOKER = "🃏"
