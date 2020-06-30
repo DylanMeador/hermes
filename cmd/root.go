@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/DylanMeador/hermes/cmd/annoy"
+	"github.com/DylanMeador/hermes/cmd/bugtest"
 	"github.com/DylanMeador/hermes/cmd/invite"
 	"github.com/DylanMeador/hermes/cmd/trick"
 	unmute "github.com/DylanMeador/hermes/cmd/unumute"
@@ -51,6 +53,8 @@ func Cmd(out io.Writer) *cobra.Command {
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
 
+	cmd.AddCommand(annoy.Cmd())
+	cmd.AddCommand(bugtest.Cmd())
 	cmd.AddCommand(invite.Cmd())
 	cmd.AddCommand(trick.Cmd())
 	cmd.AddCommand(unmute.Cmd())
@@ -103,7 +107,7 @@ func addReactions(s *discordgo.Session, m *discordgo.MessageCreate, emojiIDs ...
 
 func bug(err error, s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Println(err)
-	_, err = s.ChannelMessageSend(m.ChannelID, gifs.BUG)
+	_, err = s.ChannelMessageSend(m.ChannelID, gifs.JOKER_BRAVO+"\n"+gifs.BUG)
 	if err != nil {
 		log.Println(err)
 	}
