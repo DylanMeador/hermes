@@ -4,8 +4,8 @@ import (
 	"github.com/DylanMeador/hermes/cmd/annoy"
 	"github.com/DylanMeador/hermes/cmd/blame"
 	"github.com/DylanMeador/hermes/cmd/bugtest"
-	"github.com/DylanMeador/hermes/cmd/invite"
 	"github.com/DylanMeador/hermes/cmd/hype"
+	"github.com/DylanMeador/hermes/cmd/invite"
 	"github.com/DylanMeador/hermes/cmd/trick"
 	unmute "github.com/DylanMeador/hermes/cmd/unumute"
 	"github.com/DylanMeador/hermes/pkg/discord"
@@ -68,6 +68,15 @@ func Cmd(out io.Writer) *cobra.Command {
 
 func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	log.Println(m.Author.String() + ": " + m.Content)
+
+	channel, err := s.Channel(m.ChannelID)
+	if err != nil {
+		bug(err, s, m)
+	}
+
+	if channel.Type == discordgo.ChannelTypeDM && m.Author.ID != "103720133511368704" {
+		return
+	}
 
 	args := strings.Split(m.Content, " ")[1:]
 	cmd := Cmd(responseWriter{s, m})
