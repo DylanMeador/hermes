@@ -8,6 +8,7 @@ const (
 	CURSING = "🤬"
 	PARTYING = "🥳"
 	CONFETTI = "🎊"
+	PRAY = "🙏"
 	ROFL = "🤣"
 	CLOWN = "🤡"
 	JOKER = "🃏"
