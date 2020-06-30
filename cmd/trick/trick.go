@@ -1,19 +1,13 @@
 package trick
 
 import (
-	"fmt"
 	"github.com/DylanMeador/hermes/pkg/discord"
 	"github.com/DylanMeador/hermes/pkg/errors"
 	"github.com/DylanMeador/hermes/pkg/sounds"
 	"github.com/bwmarrin/discordgo"
-	"github.com/jonas747/dca"
 	"github.com/spf13/cobra"
-	"io"
-	"log"
 	"math/rand"
-	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -29,9 +23,6 @@ var quotes = []string{
 	"For my next trick, I'll make you disappear!",
 	"How about a magic trick?",
 }
-
-var soundCache map[string][][]byte
-var mux sync.Mutex
 
 type args struct {
 	channelName    string
@@ -59,16 +50,16 @@ func Cmd() *cobra.Command {
 }
 
 func (a *args) run(command *cobra.Command, args []string) error {
-	s, m := discord.GetSessionAndMessageFromContext(command.Context())
+	hc := discord.GetHermesCommandFromContext(command.Context())
 
 	// Find the channel that the message came from.
-	c, err := s.State.Channel(m.ChannelID)
+	c, err := hc.Session.State.Channel(hc.Message.ChannelID)
 	if err != nil {
 		// Could not find channel.
 		return err
 	}
 	// Find the guild for that channel.
-	g, err := s.State.Guild(c.GuildID)
+	g, err := hc.Session.State.Guild(c.GuildID)
 	if err != nil {
 		// Could not find guild.
 		return err
@@ -78,7 +69,7 @@ func (a *args) run(command *cobra.Command, args []string) error {
 	userIsInChannel := false
 	// Look for the message sender in that guild's current voice states.
 	for _, vs := range g.VoiceStates {
-		if vs.UserID == m.Author.ID {
+		if vs.UserID == hc.Message.Author.ID {
 			channelID = vs.ChannelID
 			userIsInChannel = true
 			break
@@ -98,17 +89,15 @@ func (a *args) run(command *cobra.Command, args []string) error {
 	}
 
 	if channelID != "" {
-		return a.playRandomShacoSound(s, m, channelID, userIsInChannel)
+		err = a.playRandomShacoSound(hc, channelID, userIsInChannel)
+	} else {
+		_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, quotes[rand.Intn(len(quotes))])
 	}
 
-	_, err = s.ChannelMessageSend(m.ChannelID, quotes[rand.Intn(len(quotes))])
 	return err
 }
 
-func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCreate, channelID string, userInChannel bool) error {
-	mux.Lock()
-	defer mux.Unlock()
-
+func (a *args) playRandomShacoSound(hc *discord.HermesCommand, channelID string, userInChannel bool) error {
 	randomShacoSound := sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))]
 
 	if a.forceDisappear {
@@ -118,142 +107,42 @@ func (a *args) playRandomShacoSound(s *discordgo.Session, m *discordgo.MessageCr
 		randomShacoSound = sounds.SHACO_ATTACK3
 	}
 
-	sound, err := loadSound(randomShacoSound)
-	if err != nil {
-		log.Println("Error loading sound: ", err)
-		return err
-	}
+	soundsToPlay := []sounds.Sound{randomShacoSound}
+	var postSoundCb func() error
 
-	fmt.Println("playing: " + randomShacoSound)
-
-	err = playSound(s, m.GuildID, channelID, sound)
-	if err != nil {
-		return err
-	}
-
-	if !userInChannel {
-		return nil
-	}
-
-	if randomShacoSound == sounds.SHACO_JOKE {
+	if userInChannel {
 		// For my next trick, I'll make you disappear!
-		data := struct {
-			ChannelID *string `json:"channel_id"`
-		}{nil}
-
-		guildMember := discordgo.EndpointGuildMember(m.GuildID, m.Author.ID)
-
-		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
-		if err != nil {
-			return err
-		}
-	}else if randomShacoSound == sounds.SHACO_ATTACK3 {
-		// The joke's on you!
-		data := struct {
-			Mute   bool `json:"mute"`
-		}{ true }
-
-		guildMember := discordgo.EndpointGuildMember(m.GuildID, m.Author.ID)
-		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
-		if err != nil {
-			return err
-		}
-
-		sound, err = loadSound(sounds.SHACO_LAUGH2)
-		if err != nil {
-			log.Println("Error loading sound: ", err)
-			return err
-		}
-
-		time.Sleep(time.Second * 5)
-
-		err = playSound(s, m.GuildID, channelID, sound)
-		if err != nil {
-			return err
-		}
-
-		time.Sleep(time.Second * 15)
-
-		data.Mute = false
-		_, err = s.RequestWithBucketID("PATCH", guildMember, data, discordgo.EndpointGuildMember(m.GuildID, ""))
-		if err != nil {
-			return err
-		}
-
-		time.Sleep(time.Second * 2)
-
-		sound, err = loadSound(sounds.SHACO_LAUGH3)
-		if err != nil {
-			log.Println("Error loading sound: ", err)
-			return err
-		}
-		err = playSound(s, m.GuildID, channelID, sound)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// loadSound attempts to load an encoded sound file from disk.
-func loadSound(path string) ([][]byte, error) {
-	if sound, ok := soundCache[path]; ok {
-		return sound, nil
-	}
-
-	file, err := os.Open(path)
-	if err != nil {
-		log.Println("Error opening dca file :", err)
-		return nil, err
-	}
-
-	var buffer [][]byte
-
-	decoder := dca.NewDecoder(file)
-
-	for {
-		frame, err := decoder.OpusFrame()
-		if err != nil {
-			if err != io.EOF {
-				return nil, err
+		if randomShacoSound == sounds.SHACO_JOKE {
+			postSoundCb = func() error {
+				return discord.RemoveFromChannel(hc, hc.Message.Author.ID)
 			}
-			break
 		}
 
-		buffer = append(buffer, frame)
+		// The joke's on you!
+		if randomShacoSound == sounds.SHACO_ATTACK3 {
+			soundsToPlay = append(soundsToPlay, sounds.SHACO_LAUGH2)
+			soundsToPlay = append(soundsToPlay, sounds.SHACO_LAUGH3)
+
+			calls := 0
+			postSoundCb = func() error {
+				calls = calls + 1
+				if calls == 1 {
+					err := discord.Mute(hc, hc.Message.Author.ID)
+					if err != nil {
+						return err
+					}
+
+					time.Sleep(time.Second * 5)
+				} else if calls == 2 {
+					time.Sleep(time.Second * 15)
+				} else {
+					return discord.Unmute(hc, hc.Message.Author.ID)
+				}
+
+				return nil
+			}
+		}
 	}
 
-	return buffer, nil
-}
-
-// playSound plays the current soundBuffer to the provided channel.
-func playSound(s *discordgo.Session, guildID, channelID string, sound [][]byte) (err error) {
-	// Join the provided voice channel.
-	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
-	if err != nil {
-		return err
-	}
-
-	// Sleep for a specified amount of time before playing the sound
-	time.Sleep(250 * time.Millisecond)
-
-	// Start speaking.
-	vc.Speaking(true)
-
-	// Send the soundBuffer data.
-	for _, buff := range sound {
-		vc.OpusSend <- buff
-	}
-
-	// Stop speaking
-	vc.Speaking(false)
-
-	// Sleep for a specificed amount of time before ending.
-	time.Sleep(250 * time.Millisecond)
-
-	// Disconnect from the provided voice channel.
-	vc.Disconnect()
-
-	return nil
+	return discord.PlaySounds(hc, channelID, postSoundCb, soundsToPlay...)
 }

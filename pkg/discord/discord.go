@@ -6,15 +6,19 @@ import (
 )
 
 const (
-	SESSION = "SESSION"
-	MESSAGE = "MESSAGE"
+	HERMESCOMMAND = "HERMESCOMMAND"
 )
 
-func GetSessionAndMessageFromContext(ctx context.Context) (*discordgo.Session, *discordgo.MessageCreate) {
-	return ctx.Value(SESSION).(*discordgo.Session), ctx.Value(MESSAGE).(*discordgo.MessageCreate)
+type HermesCommand struct {
+	Session *discordgo.Session
+	Message *discordgo.Message
+}
+
+
+func GetHermesCommandFromContext(ctx context.Context) *HermesCommand {
+	return ctx.Value(HERMESCOMMAND).(*HermesCommand)
 }
 
 func GenerateDiscordContext(s *discordgo.Session, m *discordgo.MessageCreate) context.Context {
-	ctx := context.WithValue(context.Background(), SESSION, s)
-	return context.WithValue(ctx, MESSAGE, m)
+	return context.WithValue(context.Background(), HERMESCOMMAND, &HermesCommand{s, m.Message})
 }

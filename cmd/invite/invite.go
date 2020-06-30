@@ -25,16 +25,16 @@ func Cmd() *cobra.Command {
 }
 
 func (a *args) run(command *cobra.Command, args []string) error {
-	s, m := discord.GetSessionAndMessageFromContext(command.Context())
+	hc := discord.GetHermesCommandFromContext(command.Context())
 
 	invite := discordgo.Invite{
 		Temporary: a.temporaryMembership,
 	}
-	i , err := s.ChannelInviteCreate(m.ChannelID, invite)
+	i , err := hc.Session.ChannelInviteCreate(hc.Message.ChannelID, invite)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.ChannelMessageSend(m.ChannelID, "https://discord.gg/" + i.Code)
+	_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, "https://discord.gg/" + i.Code)
 	return err
 }

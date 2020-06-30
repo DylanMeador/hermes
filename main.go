@@ -42,7 +42,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, "hermes") {
-		// TODO: handle concurrent requests more cleanly
 		go cmd.Execute(s, m)
 	}
 }
