@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/DylanMeador/hermes/cmd/invite"
 	"github.com/DylanMeador/hermes/cmd/trick"
+	unmute "github.com/DylanMeador/hermes/cmd/unumute"
 	"github.com/DylanMeador/hermes/pkg/discord"
 	"github.com/DylanMeador/hermes/pkg/emojis"
 	"github.com/DylanMeador/hermes/pkg/errors"
@@ -52,6 +53,7 @@ func Cmd(out io.Writer) *cobra.Command {
 
 	cmd.AddCommand(invite.Cmd())
 	cmd.AddCommand(trick.Cmd())
+	cmd.AddCommand(unmute.Cmd())
 
 	return cmd
 }

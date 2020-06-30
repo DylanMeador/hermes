@@ -3,9 +3,11 @@ package trick
 import (
 	"github.com/DylanMeador/hermes/pkg/discord"
 	"github.com/DylanMeador/hermes/pkg/errors"
+	"github.com/DylanMeador/hermes/pkg/gifs"
 	"github.com/DylanMeador/hermes/pkg/sounds"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -28,6 +30,7 @@ type args struct {
 	channelName    string
 	forceDisappear bool
 	forceJoke      bool
+	forceMagic     bool
 }
 
 func Cmd() *cobra.Command {
@@ -42,9 +45,11 @@ func Cmd() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play tricks in")
 	cmd.PersistentFlags().BoolVarP(&a.forceDisappear, "disappear", "d", false, "force the disappear voice to be played and user removed from voice channel")
-	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played and user muted")
+	cmd.PersistentFlags().BoolVarP(&a.forceJoke, "joke", "j", false, "force the joke voice to be played and user muted then unmuted")
+	cmd.PersistentFlags().BoolVarP(&a.forceMagic, "magic", "m", false, "force the magic voice to be played and magic gif posted")
 	cmd.PersistentFlags().MarkHidden("disappear")
 	cmd.PersistentFlags().MarkHidden("joke")
+	cmd.PersistentFlags().MarkHidden("magic")
 
 	return cmd
 }
@@ -52,16 +57,8 @@ func Cmd() *cobra.Command {
 func (a *args) run(command *cobra.Command, args []string) error {
 	hc := discord.GetHermesCommandFromContext(command.Context())
 
-	// Find the channel that the message came from.
-	c, err := hc.Session.State.Channel(hc.Message.ChannelID)
+	g, err := hc.Session.State.Guild(hc.Message.GuildID)
 	if err != nil {
-		// Could not find channel.
-		return err
-	}
-	// Find the guild for that channel.
-	g, err := hc.Session.State.Guild(c.GuildID)
-	if err != nil {
-		// Could not find guild.
 		return err
 	}
 
@@ -83,7 +80,7 @@ func (a *args) run(command *cobra.Command, args []string) error {
 			}
 		}
 		if len(channelID) == 0 {
-			command.PrintErrln("Channel " + a.channelName + " does not exist.")
+			log.Println("Channel " + a.channelName + " does not exist.")
 			return errors.CommandArgumentErr
 		}
 	}
@@ -98,28 +95,40 @@ func (a *args) run(command *cobra.Command, args []string) error {
 }
 
 func (a *args) playRandomShacoSound(hc *discord.HermesCommand, channelID string, userInChannel bool) error {
-	randomShacoSound := sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))]
+	allTrickSounds := []sounds.Sound{sounds.SHACO_MAGIC_TRICK, sounds.SHACO_MAKE_YOU_DISAPPEAR, sounds.SHACO_JOKES_ON_YOU}
+	trickSound := allTrickSounds[rand.Intn(len(allTrickSounds))]
 
 	if a.forceDisappear {
-		randomShacoSound = sounds.SHACO_JOKE
+		trickSound = sounds.SHACO_MAKE_YOU_DISAPPEAR
 	}
 	if a.forceJoke {
-		randomShacoSound = sounds.SHACO_ATTACK3
+		trickSound = sounds.SHACO_JOKES_ON_YOU
+	}
+	if a.forceMagic {
+		trickSound = sounds.SHACO_MAGIC_TRICK
 	}
 
-	soundsToPlay := []sounds.Sound{randomShacoSound}
+	soundsToPlay := []sounds.Sound{trickSound}
 	var postSoundCb func() error
 
 	if userInChannel {
+		// 	How about a magic trick?
+		if trickSound == sounds.SHACO_MAGIC_TRICK {
+			postSoundCb = func() error {
+				_, err := hc.Session.ChannelMessageSend(hc.Message.ChannelID, gifs.ALL_MAGIC[rand.Intn(len(gifs.ALL_MAGIC))])
+				return err
+			}
+		}
+
 		// For my next trick, I'll make you disappear!
-		if randomShacoSound == sounds.SHACO_JOKE {
+		if trickSound == sounds.SHACO_MAKE_YOU_DISAPPEAR {
 			postSoundCb = func() error {
 				return discord.RemoveFromChannel(hc, hc.Message.Author.ID)
 			}
 		}
 
 		// The joke's on you!
-		if randomShacoSound == sounds.SHACO_ATTACK3 {
+		if trickSound == sounds.SHACO_JOKES_ON_YOU {
 			soundsToPlay = append(soundsToPlay, sounds.SHACO_LAUGH2)
 			soundsToPlay = append(soundsToPlay, sounds.SHACO_LAUGH3)
 

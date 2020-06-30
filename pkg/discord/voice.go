@@ -88,7 +88,7 @@ func mute(hc *HermesCommand, userID string, mute bool) error {
 				var sb strings.Builder
 				sb.WriteString("It seems you have avoided my tricks, but that may have caused you some pain.")
 				sb.WriteString(" Maybe this will help.\n")
-				sb.WriteString("> hermes unmute -" + hc.Message.Author.Mention())
+				sb.WriteString("> hermes unmute")
 
 				_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, sb.String())
 				return err
