@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/pflag"
 	"io"
 	"log"
+	"math/rand"
 	"strings"
 )
 
@@ -74,7 +75,9 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 		bug(err, s, m)
 	}
 
-	if channel.Type == discordgo.ChannelTypeDM && m.Author.ID != "103720133511368704" {
+	if channel.Type == discordgo.ChannelTypeDM {
+		log.Println("dm received")
+		s.ChannelMessageSend(m.ChannelID, gifs.ALL_DM[rand.Intn(len(gifs.ALL_DM))])
 		return
 	}
 
