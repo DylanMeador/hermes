@@ -30,7 +30,9 @@ func (a *args) run(command *cobra.Command, args []string) error {
 		return err
 	}
 
-	hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.PRAY)
+	if !hc.IsHidden {
+		hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.PRAY)
+	}
 
 	return discord.PlaySound(hc, voiceChannelID, sounds.BLAME)
 }

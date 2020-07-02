@@ -38,7 +38,10 @@ func (a *args) run(command *cobra.Command, args []string) error {
 	}
 
 	if hc.Session.State.User.ID == user.ID {
-		hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.CURSING)
+		if !hc.IsHidden {
+			hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.CURSING)
+		}
+
 		_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, gifs.BAD_JOKE)
 		return err
 	}

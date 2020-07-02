@@ -16,6 +16,7 @@ const (
 	DM2         = "https://tenor.com/view/wacky-man-sliding-slide-in-dms-gif-8178841"
 	DM3         = "https://tenor.com/view/slide-in-dms-slide-in-dms-gif-5848157"
 	DM4         = "https://tenor.com/view/defectivetrash-slide-dms-slide-into-dem-dms-eyyy-gif-13293420"
+	SPOILER     = "https://tenor.com/view/spoilers-got-asoiaf-gif-5434824"
 )
 
 var (

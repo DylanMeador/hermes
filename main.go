@@ -41,7 +41,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if strings.HasPrefix(m.Content, "hermes") {
+	spoilerFree := strings.TrimPrefix(m.Content, "||")
+
+	if strings.HasPrefix(spoilerFree, "hermes") {
 		go cmd.Execute(s, m)
 	}
 }

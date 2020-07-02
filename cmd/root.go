@@ -55,6 +55,7 @@ func Cmd(out io.Writer) *cobra.Command {
 	cmd.SetUsageTemplate(usageTemplate)
 	cmd.SilenceUsage = true
 	cmd.SilenceErrors = true
+	cmd.DisableSuggestions = true
 
 	cmd.AddCommand(annoy.Cmd())
 	cmd.AddCommand(blame.Cmd())
@@ -81,12 +82,28 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	args := strings.Split(m.Content, " ")[1:]
+	commandText := strings.TrimPrefix(m.Content, "||")
+	commandText = strings.TrimSuffix(m.Content, "||")
+
+	args := strings.Split(commandText, " ")[1:]
 	cmd := Cmd(responseWriter{s, m})
 	cmd.SetArgs(args)
 
 	targetCommand, _, commandErr := cmd.Find(args)
 	flagErr := targetCommand.Flags().Parse(args)
+
+	isHiddenCommand := m.Content != commandText
+
+	if isHiddenCommand {
+		err := s.ChannelMessageDelete(m.ChannelID, m.Message.ID)
+		if err != nil {
+			bug(err, s, m)
+		}
+
+		// spoiler free mode!
+		cmd.Hidden = true
+		cmd.SetUsageTemplate(gifs.SPOILER)
+	}
 
 	var errEmojis []string
 	if flagErr != nil && flagErr != pflag.ErrHelp {
@@ -97,13 +114,17 @@ func Execute(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if len(errEmojis) > 0 {
-		addReactions(s, m, emojis.POOP)
-		addReactions(s, m, errEmojis...)
+		if !isHiddenCommand {
+			addReactions(s, m, emojis.POOP)
+			addReactions(s, m, errEmojis...)
+		}
 	} else {
-		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m)); err != nil {
+		if err := cmd.ExecuteContext(discord.GenerateDiscordContext(s, m, isHiddenCommand)); err != nil {
 			if err == errors.CommandArgumentErr {
-				addReactions(s, m, emojis.POOP)
-				addReactions(s, m, emojis.A, emojis.R, emojis.G)
+				if !isHiddenCommand {
+					addReactions(s, m, emojis.POOP)
+					addReactions(s, m, emojis.A, emojis.R, emojis.G)
+				}
 			} else {
 				bug(err, s, m)
 			}
@@ -126,14 +147,6 @@ func bug(err error, s *discordgo.Session, m *discordgo.MessageCreate) {
 	_, err = s.ChannelMessageSend(m.ChannelID, gifs.JOKER_BRAVO+"\n"+gifs.BUG)
 	if err != nil {
 		log.Println(err)
-	}
-
-	const hacker = "#hacker"
-	if !strings.Contains(m.Author.Username, hacker) {
-		err = s.GuildMemberNickname(m.GuildID, m.Author.ID, m.Author.Username+hacker)
-		if err != nil {
-			log.Println(err)
-		}
 	}
 }
 

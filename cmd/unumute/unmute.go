@@ -41,7 +41,10 @@ func (a *args) run(command *cobra.Command, args []string) error {
 		userID = user.ID
 
 		if hc.Session.State.User.ID == userID {
-			hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.CURSING)
+			if !hc.IsHidden {
+				hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.CURSING)
+			}
+
 			_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, gifs.ITS_A_TRAP)
 			return err
 		}
@@ -64,10 +67,16 @@ func (a *args) run(command *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		return hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.THUMBSUP)
+
+		if !hc.IsHidden {
+			return hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.THUMBSUP)
+		}
 	} else {
-		hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.FACEPALM)
+		if !hc.IsHidden {
+			hc.Session.MessageReactionAdd(hc.Message.ChannelID, hc.Message.ID, emojis.FACEPALM)
+		}
 		_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, "I can only unmute someone in a voice channel silly")
-		return err
 	}
+
+	return err
 }

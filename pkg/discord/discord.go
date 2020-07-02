@@ -15,6 +15,7 @@ const (
 type HermesCommand struct {
 	Session *discordgo.Session
 	Message *discordgo.Message
+	IsHidden bool
 }
 
 
@@ -22,8 +23,8 @@ func GetHermesCommandFromContext(ctx context.Context) *HermesCommand {
 	return ctx.Value(HERMESCOMMAND).(*HermesCommand)
 }
 
-func GenerateDiscordContext(s *discordgo.Session, m *discordgo.MessageCreate) context.Context {
-	return context.WithValue(context.Background(), HERMESCOMMAND, &HermesCommand{s, m.Message})
+func GenerateDiscordContext(s *discordgo.Session, m *discordgo.MessageCreate, isHidden bool) context.Context {
+	return context.WithValue(context.Background(), HERMESCOMMAND, &HermesCommand{s, m.Message, isHidden})
 }
 
 func (hc *HermesCommand) GetCommandUserVoiceChannelID() (string, error) {
