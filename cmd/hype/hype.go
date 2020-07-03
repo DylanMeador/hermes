@@ -24,7 +24,6 @@ func Cmd() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVarP(&a.mention, "user", "u", "", "@user that deserves the hype")
-	cmd.Hidden = true
 
 	return cmd
 }
