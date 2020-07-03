@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-var soundCache map[sounds.Sound][][]byte
+var soundCache = make(map[sounds.Sound][][]byte)
 var mux sync.Mutex
 
 func PlaySound(hc *HermesCommand, channelID string, sound sounds.Sound) error {
@@ -148,5 +148,7 @@ func loadSound(sound sounds.Sound) ([][]byte, error) {
 		buffer = append(buffer, frame)
 	}
 
-	return buffer, nil
+	soundCache[sound] = buffer
+
+	return soundCache[sound], nil
 }

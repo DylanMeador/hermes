@@ -99,9 +99,9 @@ func (a *args) performRandomTrick(hc *discord.HermesCommand, channelID string) e
 					return err
 				}
 
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second * 2)
 			} else if calls == 2 {
-				time.Sleep(time.Second * 15)
+				time.Sleep(time.Second * 4)
 			} else {
 				return discord.Unmute(hc, hc.Message.Author.ID)
 			}
