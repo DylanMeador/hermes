@@ -26,7 +26,6 @@ func Cmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to echo")
 	cmd.PersistentFlags().DurationVarP(&a.duration, "duration", "d", 5 * time.Second, "how long to listen before echoing")
 
-
 	return cmd
 }
 
@@ -69,7 +68,12 @@ func (a *args) run(command *cobra.Command, args []string) error {
 	}
 
 	if voiceChannelID != "" {
-		return discord.Echo(hc, voiceChannelID, a.duration)
+		soundBytes, err := discord.RecordSounds(hc, voiceChannelID, a.duration)
+		if err != nil {
+			return err
+		}
+
+		return discord.PlaySoundBytes(hc, voiceChannelID, soundBytes)
 	}
 
 	return errors.CommandArgumentErr

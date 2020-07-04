@@ -15,6 +15,20 @@ import (
 var soundCache = make(map[sounds.Sound][][]byte)
 var mux sync.Mutex
 
+func PlaySoundBytes(hc *HermesCommand, channelID string, soundBytes [][]byte) error {
+	mux.Lock()
+	defer mux.Unlock()
+
+	guildID := hc.Message.GuildID
+	vc, err := hc.Session.ChannelVoiceJoin(guildID, channelID, false, false)
+	if err != nil {
+		return err
+	}
+	defer vc.Disconnect()
+
+	return playSoundInChannel(vc, soundBytes)
+}
+
 func PlaySound(hc *HermesCommand, channelID string, sound sounds.Sound) error {
 	return PlaySounds(hc, channelID, nil, sound)
 }
@@ -52,20 +66,19 @@ func PlaySounds(hc *HermesCommand, channelID string, postSoundCb func() error, s
 	return nil
 }
 
-func Echo(hc *HermesCommand, channelID string, duration time.Duration) error {
+func RecordSounds(hc *HermesCommand, channelID string, duration time.Duration) ([][]byte, error) {
 	mux.Lock()
 	defer mux.Unlock()
 
 	guildID := hc.Message.GuildID
 	vc, err := hc.Session.ChannelVoiceJoin(guildID, channelID, false, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer vc.Disconnect()
 
 	soundBytes := recordChannelSounds(vc, duration)
-
-	return playSoundInChannel(vc, soundBytes)
+	return soundBytes, nil
 }
 
 func RemoveFromChannel(hc *HermesCommand, userID string) error {
