@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 var soundCache = make(map[sounds.Sound][][]byte)
@@ -30,7 +31,13 @@ func PlaySounds(hc *HermesCommand, channelID string, postSoundCb func() error, s
 	defer vc.Disconnect()
 
 	for _, sound := range sounds {
-		err = playSoundInChannel(vc, sound)
+		soundBytes, err := loadSound(sound)
+		if err != nil {
+			log.Println("Error loading sound: ", err)
+			return err
+		}
+		log.Println("playing: " + sound)
+		err = playSoundInChannel(vc, soundBytes)
 		if err != nil {
 			return err
 		}
@@ -43,6 +50,22 @@ func PlaySounds(hc *HermesCommand, channelID string, postSoundCb func() error, s
 	}
 
 	return nil
+}
+
+func Echo(hc *HermesCommand, channelID string, duration time.Duration) error {
+	mux.Lock()
+	defer mux.Unlock()
+
+	guildID := hc.Message.GuildID
+	vc, err := hc.Session.ChannelVoiceJoin(guildID, channelID, false, false)
+	if err != nil {
+		return err
+	}
+	defer vc.Disconnect()
+
+	soundBytes := recordChannelSounds(vc, duration)
+
+	return playSoundInChannel(vc, soundBytes)
 }
 
 func RemoveFromChannel(hc *HermesCommand, userID string) error {
@@ -87,8 +110,8 @@ func mute(hc *HermesCommand, userID string, mute bool) error {
 			if mute == false {
 				var sb strings.Builder
 				sb.WriteString("It seems you have avoided my tricks, but that may have caused you some pain.")
-				sb.WriteString(" Maybe this will help.\n")
-				sb.WriteString("> hermes unmute")
+				sb.WriteString(" If so, try the following command when you are in a voice channel:\n")
+				sb.WriteString("> hermes unmute -u " + hc.Message.Author.Mention())
 
 				_, err = hc.Session.ChannelMessageSend(hc.Message.ChannelID, sb.String())
 				return err
@@ -100,21 +123,13 @@ func mute(hc *HermesCommand, userID string, mute bool) error {
 	return err
 }
 
-func playSoundInChannel(vc *discordgo.VoiceConnection, sound sounds.Sound) error {
-	buffer, err := loadSound(sound)
-	if err != nil {
-		log.Println("Error loading sound: ", err)
-		return err
-	}
-
-	err = vc.Speaking(true)
+func playSoundInChannel(vc *discordgo.VoiceConnection, soundBytes [][]byte) error {
+	err := vc.Speaking(true)
 	if err != nil {
 		return err
 	}
 
-	log.Println("playing: " + sound)
-
-	for _, buff := range buffer {
+	for _, buff := range soundBytes {
 		vc.OpusSend <- buff
 	}
 
@@ -151,4 +166,18 @@ func loadSound(sound sounds.Sound) ([][]byte, error) {
 	soundCache[sound] = buffer
 
 	return soundCache[sound], nil
+}
+
+func recordChannelSounds(vc *discordgo.VoiceConnection, duration time.Duration) [][]byte {
+	var buffer [][]byte
+	ticker := time.NewTicker(duration)
+
+	for {
+		select {
+		case packet := <-vc.OpusRecv:
+			buffer = append(buffer, packet.Opus)
+		case <-ticker.C:
+			return buffer
+		}
+	}
 }

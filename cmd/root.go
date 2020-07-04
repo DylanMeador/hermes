@@ -4,6 +4,7 @@ import (
 	"github.com/DylanMeador/hermes/cmd/annoy"
 	"github.com/DylanMeador/hermes/cmd/blame"
 	"github.com/DylanMeador/hermes/cmd/bugtest"
+	"github.com/DylanMeador/hermes/cmd/echo"
 	"github.com/DylanMeador/hermes/cmd/hype"
 	"github.com/DylanMeador/hermes/cmd/invite"
 	"github.com/DylanMeador/hermes/cmd/trick"
@@ -60,6 +61,7 @@ func Cmd(out io.Writer) *cobra.Command {
 	cmd.AddCommand(annoy.Cmd())
 	cmd.AddCommand(blame.Cmd())
 	cmd.AddCommand(bugtest.Cmd())
+	cmd.AddCommand(echo.Cmd())
 	cmd.AddCommand(hype.Cmd())
 	cmd.AddCommand(invite.Cmd())
 	cmd.AddCommand(trick.Cmd())
