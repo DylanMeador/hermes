@@ -20,6 +20,7 @@ const (
 	SHACO_LAUGH3             = Sound("pkg/sounds/shaco/laugh3.dca")
 	SHACO_MAGIC_TRICK        = Sound("pkg/sounds/shaco/select.dca")
 	SHACO_TAUNT              = Sound("pkg/sounds/shaco/taunt.dca")
+	SAD                      = Sound("pkg/sounds/imogen-heap-hide-and-seek-mm-what-you-say.dca")
 )
 
 var (

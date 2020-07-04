@@ -1,4 +1,4 @@
-package annoy
+package sad
 
 import (
 	"github.com/DylanMeador/hermes/pkg/discord"
@@ -6,7 +6,6 @@ import (
 	"github.com/DylanMeador/hermes/pkg/sounds"
 	"github.com/bwmarrin/discordgo"
 	"github.com/spf13/cobra"
-	"math/rand"
 	"strings"
 )
 
@@ -18,12 +17,12 @@ func Cmd() *cobra.Command {
 	a := &args{}
 
 	cmd := &cobra.Command{
-		Use:   "annoy",
-		Short: "this will be fun",
+		Use:   "sad",
+		Short: "sometimes, you just have a bad game",
 		RunE:  a.run,
 	}
 
-	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to annoy")
+	cmd.PersistentFlags().StringVarP(&a.channelName, "channel", "c", "", "the voice channel to play in")
 
 	return cmd
 }
@@ -63,7 +62,7 @@ func (a *args) run(command *cobra.Command, args []string) error {
 	}
 
 	if voiceChannelID != "" {
-		return discord.PlaySound(hc, voiceChannelID, sounds.ALL_SHACO[rand.Intn(len(sounds.ALL_SHACO))])
+		return discord.PlaySound(hc, voiceChannelID, sounds.SAD)
 	}
 
 	return errors.CommandArgumentErr

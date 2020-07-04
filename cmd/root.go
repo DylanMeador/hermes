@@ -7,6 +7,7 @@ import (
 	"github.com/DylanMeador/hermes/cmd/echo"
 	"github.com/DylanMeador/hermes/cmd/hype"
 	"github.com/DylanMeador/hermes/cmd/invite"
+	"github.com/DylanMeador/hermes/cmd/sad"
 	"github.com/DylanMeador/hermes/cmd/trick"
 	unmute "github.com/DylanMeador/hermes/cmd/unumute"
 	"github.com/DylanMeador/hermes/pkg/discord"
@@ -64,6 +65,7 @@ func Cmd(out io.Writer) *cobra.Command {
 	cmd.AddCommand(echo.Cmd())
 	cmd.AddCommand(hype.Cmd())
 	cmd.AddCommand(invite.Cmd())
+	cmd.AddCommand(sad.Cmd())
 	cmd.AddCommand(trick.Cmd())
 	cmd.AddCommand(unmute.Cmd())
 
