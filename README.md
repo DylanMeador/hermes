@@ -1,5 +1,3 @@
 # hermes
 
-How to run locally
-
-1. 
+A discord bot to annoy your friends.
